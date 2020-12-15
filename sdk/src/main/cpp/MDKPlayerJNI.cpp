@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2020 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2018-2020 WangBin <wbsecg1 at gmail.com>
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -24,24 +24,12 @@ enum { // custom enum
 enum {
     MEDIA_INFO_UNKNOWN				= 1,
     MEDIA_INFO_VIDEO_RENDERING_START= 3,
-    MEDIA_INFO_VIDEO_TRACK_LAGGING	= 700,
     MEDIA_INFO_BUFFERING_START		= 701,
     MEDIA_INFO_BUFFERING_END		= 702,
-    MEDIA_INFO_BAD_INTERLEAVING		= 800,
-    MEDIA_INFO_NOT_SEEKABLE			= 801,
-    MEDIA_INFO_METADATA_UPDATE		= 802,
-    MEDIA_INFO_UNSUPPORTED_SUBTITLE = 901,
-    MEDIA_INFO_SUBTITLE_TIMED_OUT	= 902,
 };
 
 enum {
-    MEDIA_ERROR_UNKNOWN 							= 1,
-    MEDIA_ERROR_SERVER_DIED 						= 100,
-    MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK 	= 200,
     MEDIA_ERROR_TIMED_OUT							= -110,
-    MEDIA_ERROR_IO									= -1004,
-    MEDIA_ERROR_MALFORMED							= -1007,
-    MEDIA_ERROR_UNSUPPORTED							= -1010, // codec, format
 };
 
 static void PostEvent(std::weak_ptr<jobject> wp, int what, int arg1 = 0, int arg2 = 0, jobject msg = nullptr)
@@ -106,7 +94,7 @@ Player* get(jlong obj_ptr) {
     return r->player;
 }
 
-#define MDK_JNI_FUNC(Name) Java_com_mediadevkit_mdkplayer_##Name
+#define MDK_JNI_FUNC(Name) Java_com_mediadevkit_sdk_##Name
 #define MDK_JNI(Return, Name, ...) \
     JNIEXPORT Return JNICALL MDK_JNI_FUNC(Name) (JNIEnv *env, jobject thiz, jlong obj_ptr, ##__VA_ARGS__)
 

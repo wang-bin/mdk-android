@@ -1,4 +1,5 @@
-package com.mediadevkit.mdkplayer;
+package com.mediadevkit.sdk;
+
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -34,14 +35,14 @@ public class MDKPlayer implements SurfaceHolder.Callback {
     public void setPlayList(String[] urls) { nativeSetPlayList(native_ptr, urls); }
 
     //public void setPreloadNextImmediately(bool value) { nativeSetPreloadNextImmediately(native_ptr, value); }
-    void setState(int state) { nativeSetState(native_ptr, state); }
-    int state() {return nativeState(native_ptr);}
-    void resizeVideoSurface(int width, int height) { nativeResizeVideoSurface(native_ptr, width, height);}
-    void renderVideo() { nativeRenderVideo(native_ptr);}
-    void seek(int ms) { nativeSeek(native_ptr, ms);}
-    int position() { return nativePosition(native_ptr);}
+    public void setState(int state) { nativeSetState(native_ptr, state); }
+    public int state() {return nativeState(native_ptr);}
+    public void resizeVideoSurface(int width, int height) { nativeResizeVideoSurface(native_ptr, width, height);}
+    public void renderVideo() { nativeRenderVideo(native_ptr);}
+    public void seek(int ms) { nativeSeek(native_ptr, ms);}
+    public int position() { return nativePosition(native_ptr);}
 
-    int getDuration() { return nativeGetDuration(native_ptr); }
+    public int getDuration() { return nativeGetDuration(native_ptr); }
 
     protected void finalize() {
         nativeDestroy(native_ptr);
@@ -68,7 +69,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
         holder.removeCallback(this);
     }
 
-    void setSurfaceView(SurfaceView sv) {
+    public void setSurfaceView(SurfaceView sv) {
         if (sv instanceof GLSurfaceView) {
 
         } else {
@@ -78,7 +79,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
                 setSurfaceHolder(sv.getHolder());
         }
     }
-    void setSurfaceHolder(SurfaceHolder holder) {
+    public void setSurfaceHolder(SurfaceHolder holder) {
         if (sh == holder)
             return;
         sh = holder;
@@ -118,7 +119,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
             System.loadLibrary("c++_shared");
         } catch(UnsatisfiedLinkError e) {}
         try {
-            System.loadLibrary("gnustl_shared");
+            System.loadLibrary("ffmpeg");
         } catch(UnsatisfiedLinkError e) {}
         System.loadLibrary("mdk");
         try {

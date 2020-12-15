@@ -1,4 +1,5 @@
 package com.mediadevkit.mdkplayer;
+import com.mediadevkit.sdk.MDKPlayer;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,6 +25,7 @@ import android.util.Log;
 
 // TODO: render to SurfaceTexture surface. OnFrameAvailable will be called after swapBuffers or data copied? http://blog.csdn.net/king1425/article/details/72773331
 // TODO: request permissions(sdcard) for android 23+
+// AppCompatActivity:  incompatible with android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" // https://stackoverflow.com/questions/39604889/how-to-fix-you-need-to-use-a-theme-appcompat-theme-or-descendant-with-this-a/39604946
 public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
     private SurfaceView mView = null;
     private MDKPlayer mPlayer = null;
