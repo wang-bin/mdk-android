@@ -11,6 +11,10 @@ project("mdkplayer")
 if(ANDROID)
     include(mdk-sdk/lib/cmake/FindMDK.cmake)
 endif()
+
+set(CMAKE_C_VISIBILITY_PRESET hidden)
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 # Creates and names a library, sets it as either STATIC
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.

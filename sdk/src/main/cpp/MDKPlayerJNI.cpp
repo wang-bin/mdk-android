@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2018-2022 WangBin <wbsecg1 at gmail.com>
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -62,7 +62,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         else
             __android_log_print(ANDROID_LOG_DEBUG, "MDK.JNI", "%s", msg);
     });
-
+    //SetGlobalOption("profiler.gpu", 1);
     std::clog << "JNI_OnLoad" << std::endl;
     JNIEnv* env = nullptr;
     if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK || !env) {
@@ -70,7 +70,8 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
     jmi::javaVM(vm);
-    javaVM(vm);
+    SetGlobalOption("JavaVM", vm);
+    //javaVM(vm);
     return JNI_VERSION_1_4;
 }
 
@@ -136,8 +137,8 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
         return false;
     });
     p->setAudioBackends({"AudioTrack", "OpenSL"});
-    //p->setAudioDecoders({"AMediaCodec:java=0", "FFmpeg"}); // AMediaCodec: higher cpu? FIXME: wrong result on x86
-    p->setVideoDecoders({"AMediaCodec:java=0:copy=0:surface=1:async=0:cache_output=16", "FFmpeg"});
+    //p->setDecoders(MediaType::Audio, {"AMediaCodec:java=0", "FFmpeg"}); // AMediaCodec: higher cpu? FIXME: wrong result on x86
+    p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:async=0", "FFmpeg"});
     return jlong(pr);
 }
 
@@ -189,7 +190,7 @@ MDK_JNI(void, MDKPlayer_nativeSetPlayList, jobjectArray urls)
 
 MDK_JNI(void, MDKPlayer_nativeSetState, int state)
 {
-    get(obj_ptr)->setState((PlaybackState)state);
+    get(obj_ptr)->set((State)state);
 }
 
 MDK_JNI(jint, MDKPlayer_nativeState)
@@ -199,12 +200,16 @@ MDK_JNI(jint, MDKPlayer_nativeState)
 
 MDK_JNI(void, MDKPlayer_nativeResizeVideoSurface, int width, int height)
 {
+#if !(DECODE_TO_SURFACEVIEW + 0)
     get(obj_ptr)->setVideoSurfaceSize(width, height);
+#endif
 }
 
 MDK_JNI(void, MDKPlayer_nativeRenderVideo)
 {
+#if !(DECODE_TO_SURFACEVIEW + 0)
     get(obj_ptr)->renderVideo();
+#endif
 }
 
 MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
@@ -213,7 +218,12 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
     if (!obj_ptr)
         return 0; // called in surfaceDestroyed when player was already destroyed in onPause
     auto p = get(obj_ptr);
+#if (DECODE_TO_SURFACEVIEW + 0)
+    auto amc = "AMediaCodec:java=0:copy=0:async=0:dv=1:surface=" + std::to_string((intptr_t)s);
+    p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:async=0:dv=1", "FFmpeg"});
+#else
     p->updateNativeSurface(s, w, h);
+#endif
     return (jlong)s;
 }
 

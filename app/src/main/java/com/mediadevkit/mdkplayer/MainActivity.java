@@ -1,27 +1,21 @@
 package com.mediadevkit.mdkplayer;
-import com.mediadevkit.sdk.MDKPlayer;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.os.Bundle;
-import android.widget.TextView;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
-
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.MotionEvent;
-import android.view.VelocityTracker;
 import android.view.GestureDetector;
-import android.view.WindowManager;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
-import android.view.View;
-import android.util.Log;
+import android.view.VelocityTracker;
+import android.view.WindowManager;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.mediadevkit.sdk.MDKPlayer;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 
 // TODO: render to SurfaceTexture surface. OnFrameAvailable will be called after swapBuffers or data copied? http://blog.csdn.net/king1425/article/details/72773331
 // TODO: request permissions(sdcard) for android 23+
@@ -63,11 +57,11 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
 
         Intent intent = getIntent();
         String action = intent.getAction();
-        if (intent.ACTION_VIEW.equals(action)) {
+        if (Intent.ACTION_VIEW.equals(action)) {
             mPlayer.setMedia(intent.getDataString());
         } else {
             // getExternalFilesDir(Environment.DIRECTORY_MOVIES).toString() // app local
-            mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/newyear.mp4");
+            mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/test.mp4");
             String[] urls = new String[15];
             for (int i = 0; i < 10; ++i)
                 urls[i] = "/sdcard/Movies/s/s0" + i + ".mkv";
@@ -157,7 +151,7 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
         return true;
     }
     static class DemoRenderer implements GLSurfaceView.Renderer {
-        private MDKPlayer mPlayer;
+        private final MDKPlayer mPlayer;
         DemoRenderer(MDKPlayer player) {
             mPlayer = player;
         }

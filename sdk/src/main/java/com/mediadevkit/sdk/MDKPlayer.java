@@ -1,14 +1,12 @@
 package com.mediadevkit.sdk;
 
+import android.opengl.GLSurfaceView;
+import android.os.Handler;
+import android.os.Message;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.opengl.GLSurfaceView;
-import android.util.Log;
-import android.os.Looper;
-import android.os.Handler;
-import android.os.Message;
-import java.lang.ref.WeakReference;
 
 public class MDKPlayer implements SurfaceHolder.Callback {
     public Handler mHandler = new Handler() {
