@@ -10,6 +10,7 @@
 #include <list>
 #include <string>
 #include <iostream>
+#define  DECODE_TO_SURFACEVIEW 0
 
 enum { // custom enum
     MEDIA_ERROR = -1,
@@ -52,26 +53,29 @@ static void PostEvent(std::weak_ptr<jobject> wp, int what, int arg1 = 0, int arg
 using namespace MDK_NS;
 extern "C" {
 
-jint JNI_OnLoad(JavaVM* vm, void* reserved)
+JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
     freopen("/sdcard/log.txt", "wta", stdout);
     freopen("/sdcard/loge.txt", "w", stderr);
     setLogHandler([](LogLevel v, const char* msg){
         if (v < LogLevel::Info)
-            __android_log_print(ANDROID_LOG_WARN, "MDK.JNI", "%s", msg);
+            __android_log_print(ANDROID_LOG_WARN, "MDK-JNI", "%s", msg);
         else
-            __android_log_print(ANDROID_LOG_DEBUG, "MDK.JNI", "%s", msg);
+            __android_log_print(ANDROID_LOG_DEBUG, "MDK-JNI", "%s", msg);
     });
-    //SetGlobalOption("profiler.gpu", 1);
+
+    SetGlobalOption("profiler.gpu", 1);
+    SetGlobalOption("logLevel", "all");
+
     std::clog << "JNI_OnLoad" << std::endl;
     JNIEnv* env = nullptr;
     if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK || !env) {
         std::clog << "GetEnv for JNI_VERSION_1_4 failed" << std::endl;
         return -1;
     }
+
     jmi::javaVM(vm);
-    SetGlobalOption("JavaVM", vm);
-    //javaVM(vm);
+    //SetGlobalOption("JavaVM", vm);
     return JNI_VERSION_1_4;
 }
 
@@ -130,6 +134,7 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
         return true;
     });
     p->onEvent([w](const MediaEvent& e){
+        __android_log_print(ANDROID_LOG_DEBUG, "MDK-JNI", "MediaEvent %d: %s %s", e.error, e.category.data(), e.detail.data());
         if (e.category == "reader.buffering") { // TODO: hash map
             PostEvent(w, MEDIA_BUFFERING_UPDATE, e.error);
             return false;
@@ -139,6 +144,8 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
     p->setAudioBackends({"AudioTrack", "OpenSL"});
     //p->setDecoders(MediaType::Audio, {"AMediaCodec:java=0", "FFmpeg"}); // AMediaCodec: higher cpu? FIXME: wrong result on x86
     p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:async=0", "FFmpeg"});
+
+    p->setLoop(-1);
     return jlong(pr);
 }
 
@@ -219,8 +226,11 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
         return 0; // called in surfaceDestroyed when player was already destroyed in onPause
     auto p = get(obj_ptr);
 #if (DECODE_TO_SURFACEVIEW + 0)
-    auto amc = "AMediaCodec:java=0:copy=0:async=0:dv=1:surface=" + std::to_string((intptr_t)s);
-    p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:async=0:dv=1", "FFmpeg"});
+    if (s) {
+        ANativeWindow* anw = s ? ANativeWindow_fromSurface(env, s) : nullptr; // TODO: release
+        auto amc = "AMediaCodec:java=0:async=0:surface=" + std::to_string((intptr_t)anw);
+        p->setDecoders(MediaType::Video, {amc.data(), "FFmpeg"});
+    }
 #else
     p->updateNativeSurface(s, w, h);
 #endif
