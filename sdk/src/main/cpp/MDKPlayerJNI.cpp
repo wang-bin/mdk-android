@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2018-2023 WangBin <wbsecg1 at gmail.com>
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -143,7 +143,9 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
     });
     p->setAudioBackends({"AudioTrack", "OpenSL"});
     //p->setDecoders(MediaType::Audio, {"AMediaCodec:java=0", "FFmpeg"}); // AMediaCodec: higher cpu? FIXME: wrong result on x86
-    p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:async=0", "FFmpeg"});
+   // name: c2.android.hevc.decoder,c2.qti.hevc.decoder.low_latency,c2.qti.hevc.decoder.secure, OMX.google.hevc.decoder, OMX.qcom.video.decoder.hevc.low_latency, c2.dolby.avc-hevc.decoder, OMX.google.hevc.decoder
+    //p->setDecoders(MediaType::Video, {"MediaCodec:ndk_codec=1", "FFmpeg"});
+    p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:image=1:async=0:low_latency=1", "FFmpeg"});
 
     p->setLoop(-1);
     return jlong(pr);
@@ -227,9 +229,10 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
     auto p = get(obj_ptr);
 #if (DECODE_TO_SURFACEVIEW + 0)
     if (s) {
-        ANativeWindow* anw = s ? ANativeWindow_fromSurface(env, s) : nullptr; // TODO: release
-        auto amc = "AMediaCodec:java=0:async=0:surface=" + std::to_string((intptr_t)anw);
-        p->setDecoders(MediaType::Video, {amc.data(), "FFmpeg"});
+        //ANativeWindow* anw = s ? ANativeWindow_fromSurface(env, s) : nullptr; // TODO: release
+        //p->setProperty("video.decoder", "window=" + std::to_string((intptr_t)anw));
+        auto ss = (jobject)env->NewGlobalRef(s); // TODO: release
+        p->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)ss));
     }
 #else
     p->updateNativeSurface(s, w, h);
