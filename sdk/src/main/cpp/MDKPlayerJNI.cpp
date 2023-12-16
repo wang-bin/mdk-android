@@ -5,6 +5,7 @@
 #include <jni.h>
 #include <android/native_window_jni.h>
 #include <android/log.h>
+//#include <vulkan/vulkan.h> // before any mdk header
 #include <mdk/Player.h>
 #include <mdk/MediaInfo.h>
 #include <list>
@@ -235,6 +236,18 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
         p->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)ss));
     }
 #else
+/*
+    static jobject ss = nullptr;
+    //if (ss)
+    //    return (jlong)s;
+    if (w <= 0 || h <= 0) // TODO: required by vk. BUS_ADRALN
+        return (jlong)s;
+    ss = s;
+    VulkanRenderAPI vkra{};
+    vkra.debug = 1;
+    std::clog << w << "x" << h << "device_index: " << vkra.device_index << std::endl;
+    p->setRenderAPI(&vkra, s);
+    */
     p->updateNativeSurface(s, w, h);
 #endif
     return (jlong)s;

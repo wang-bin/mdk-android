@@ -8,7 +8,9 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.VelocityTracker;
+import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,6 +24,7 @@ import javax.microedition.khronos.opengles.GL10;
 // AppCompatActivity:  incompatible with android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" // https://stackoverflow.com/questions/39604889/how-to-fix-you-need-to-use-a-theme-appcompat-theme-or-descendant-with-this-a/39604946
 public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
     private SurfaceView mView = null;
+    private GLSurfaceView mGLView = null;
     private MDKPlayer mPlayer = null;
     private VelocityTracker mVelocityTracker = null;
     private int mState = 0;
@@ -32,28 +35,19 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        //this.requestWindowFeature(Window.FEATURE_NO_TITLE); //It's enough to remove the line
+        //But if you want to display  full screen (without action bar) write too
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        setContentView(R.layout.activity_main);
         mPlayer = new MDKPlayer();
-        if (true) {
-            mView = new SurfaceView(this); // FIXME: destroyed on pause
-        } else {
-            // background error:
-//09-30 23:26:30.337	17378	17403	E	Surface	queueBuffer: error queuing buffer to SurfaceTexture, -19
-//09-30 23:26:30.337	17378	17403	I	Adreno	QueueBuffer: queueBuffer failed
-//09-30 23:26:30.337	17378	17403	W	GLThread	eglSwapBuffers failed: EGL_BAD_SURFACE
-//09-30 23:26:30.427	17378	17378	W	IInputConnectionWrapper	reportFullscreenMode on inexistent InputConnection
-            GLSurfaceView glView = new GLSurfaceView(this);
-            // Pick an EGLConfig with RGB8 color, 16-bit depth, no stencil,
-            // supporting OpenGL ES 2.0 or later backwards-compatible versions.
-            glView.setEGLConfigChooser(5, 6, 5, 0, 0, 0);
-            glView.setEGLContextClientVersion(2);
-            glView.setRenderer(new DemoRenderer(mPlayer));
-            mView = glView;
-        }
-        setContentView(mView);
+        mView = findViewById(R.id.surfaceView);
         mPlayer.setSurfaceView(mView);
+
+        mGLView = findViewById(R.id.glSurfaceView);
+        mGLView.setEGLConfigChooser(5, 6, 5, 0, 0, 0);
+        mGLView.setEGLContextClientVersion(2);
+        mGLView.setRenderer(new DemoRenderer(mPlayer));
 
         Intent intent = getIntent();
         String action = intent.getAction();
@@ -61,7 +55,11 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
             mPlayer.setMedia(intent.getDataString());
         } else {
             // getExternalFilesDir(Environment.DIRECTORY_MOVIES).toString() // app local
-            mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/test.mp4");
+            //mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/Samsung Chasing The Light Demo.ts");
+            //mPlayer.setMedia("https://live.nodemedia.cn:8443/live/b480_265.flv");
+            //mPlayer.setMedia("http://192.168.3.168:8888/86831_2158.ts");
+            mPlayer.setMedia("https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4");
+            //mPlayer.setMedia("https://www.rmp-streaming.com/media/big-buck-bunny-720p.mp4");
             String[] urls = new String[15];
             for (int i = 0; i < 10; ++i)
                 urls[i] = "/sdcard/Movies/s/s0" + i + ".mkv";
@@ -114,7 +112,11 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
                 if (mState == 0)
                     mState = 1;
                 //Log.i("MDK.Java","DOWN event.getX(): " + event.getX() + " mPos:" + mPos);
-                mPlayer.setState(2);
+                //mPlayer.setState(2);
+                if (mState == 1)
+                    mPlayer.setState(2);
+                else
+                    mPlayer.setState(1);
                 if (mVelocityTracker == null)
                     mVelocityTracker = VelocityTracker.obtain();
                 mVelocityTracker.clear();
@@ -139,7 +141,7 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
             }
             break;
             case MotionEvent.ACTION_UP:
-                mPlayer.setState(mState);
+                //mPlayer.setState(mState);
                 //Log.i("MDK.Java","UP event.getX(): " + event.getX());
                 break;
             case MotionEvent.ACTION_CANCEL:
