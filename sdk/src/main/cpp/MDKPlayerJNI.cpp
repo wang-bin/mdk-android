@@ -5,13 +5,14 @@
 #include <jni.h>
 #include <android/native_window_jni.h>
 #include <android/log.h>
-//#include <vulkan/vulkan.h> // before any mdk header
+#include <vulkan/vulkan.h> // before any mdk header
 #include <mdk/Player.h>
 #include <mdk/MediaInfo.h>
 #include <list>
 #include <string>
 #include <iostream>
 #define  DECODE_TO_SURFACEVIEW 0
+#define USE_VULKAN 0
 
 enum { // custom enum
     MEDIA_ERROR = -1,
@@ -135,7 +136,7 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
         return true;
     });
     p->onEvent([w](const MediaEvent& e){
-        __android_log_print(ANDROID_LOG_DEBUG, "MDK-JNI", "MediaEvent %d: %s %s", e.error, e.category.data(), e.detail.data());
+        //__android_log_print(ANDROID_LOG_DEBUG, "MDK-JNI", "MediaEvent %d: %s %s", e.error, e.category.data(), e.detail.data());
         if (e.category == "reader.buffering") { // TODO: hash map
             PostEvent(w, MEDIA_BUFFERING_UPDATE, e.error);
             return false;
@@ -236,7 +237,8 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
         p->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)ss));
     }
 #else
-/*
+# if (USE_VULKAN + 0)
+    p->setProperty("video.decoder", "surface=0"); // surface is not supported yet
     static jobject ss = nullptr;
     //if (ss)
     //    return (jlong)s;
@@ -244,10 +246,10 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
         return (jlong)s;
     ss = s;
     VulkanRenderAPI vkra{};
-    vkra.debug = 1;
+    //vkra.debug = 1; // crash if no layer found
     std::clog << w << "x" << h << "device_index: " << vkra.device_index << std::endl;
     p->setRenderAPI(&vkra, s);
-    */
+# endif
     p->updateNativeSurface(s, w, h);
 #endif
     return (jlong)s;

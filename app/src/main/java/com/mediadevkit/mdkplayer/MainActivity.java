@@ -45,7 +45,7 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
         mPlayer.setSurfaceView(mView);
 
         mGLView = findViewById(R.id.glSurfaceView);
-        mGLView.setEGLConfigChooser(5, 6, 5, 0, 0, 0);
+        mGLView.setEGLConfigChooser(8, 8, 8, 0, 0, 0);
         mGLView.setEGLContextClientVersion(2);
         mGLView.setRenderer(new DemoRenderer(mPlayer));
 
@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
             //mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/Samsung Chasing The Light Demo.ts");
             //mPlayer.setMedia("https://live.nodemedia.cn:8443/live/b480_265.flv");
             //mPlayer.setMedia("http://192.168.3.168:8888/86831_2158.ts");
-            mPlayer.setMedia("https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4");
+            mPlayer.setMedia("https://vfx.mtime.cn/Video/2021/11/16/mp4/211116131456748178.mp4");//https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4");
             //mPlayer.setMedia("https://www.rmp-streaming.com/media/big-buck-bunny-720p.mp4");
             String[] urls = new String[15];
             for (int i = 0; i < 10; ++i)

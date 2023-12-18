@@ -14,6 +14,8 @@
             android:configChanges="orientation|screenSize"
             android:exported="true"
             >
+            <meta-data android:name="com.android.graphics.injectLayers.enable"
+                android:value="true"/>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
