@@ -13,6 +13,7 @@
         <activity android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true"
+            android:colorMode="hdr"
             >
             <meta-data android:name="com.android.graphics.injectLayers.enable"
                 android:value="true"/>

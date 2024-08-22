@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2023 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2018-2024 WangBin <wbsecg1 at gmail.com>
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -57,8 +57,8 @@ extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
-    freopen("/sdcard/log.txt", "wta", stdout);
-    freopen("/sdcard/loge.txt", "w", stderr);
+    //freopen("/sdcard/log.txt", "wta", stdout); // java.lang.IllegalArgumentException: Primary directory null not allowed for content://media/external_primary/file; allowed directories are [Download, Documents] filePath = /storage/emulated/0/loge.txt callingPackageName = com.mediadevkit.mdkplayer
+    //freopen("/sdcard/loge.txt", "w", stderr);
     setLogHandler([](LogLevel v, const char* msg){
         if (v < LogLevel::Info)
             __android_log_print(ANDROID_LOG_WARN, "MDK-JNI", "%s", msg);
@@ -93,7 +93,6 @@ struct PlayerRef {
 
     Player* player = new Player();
     std::shared_ptr<jobject> spobj;
-    MediaStatus status = MediaStatus::NoMedia;
 };
 
 Player* get(jlong obj_ptr) {
@@ -125,14 +124,13 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
                 PostEvent(w, MEDIA_PLAYBACK_COMPLETE);
         }
     });
-    p->onMediaStatusChanged([=](MediaStatus s){
-        if (flags_added(pr->status, s, MediaStatus::Buffering))
+    p->onMediaStatus([=](MediaStatus oldVal, MediaStatus newVal){
+        if (flags_added(oldVal, newVal, MediaStatus::Buffering))
             PostEvent(w, MEDIA_INFO, MEDIA_INFO_BUFFERING_START);
-        if (flags_removed(pr->status, s, MediaStatus::Buffering))
+        if (flags_removed(oldVal, newVal, MediaStatus::Buffering))
             PostEvent(w, MEDIA_INFO, MEDIA_INFO_BUFFERING_END);
-        if (flags_added(pr->status, s, MediaStatus::Prepared))
+        if (flags_added(oldVal, newVal, MediaStatus::Prepared))
             PostEvent(w, MEDIA_PREPARED);
-        pr->status = s;
         return true;
     });
     p->onEvent([w](const MediaEvent& e){
@@ -143,13 +141,14 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
         }
         return false;
     });
-    p->setAudioBackends({"AudioTrack", "OpenSL"});
+    //p->setAudioBackends({"AudioTrack", "OpenSL"});
     //p->setDecoders(MediaType::Audio, {"AMediaCodec:java=0", "FFmpeg"}); // AMediaCodec: higher cpu? FIXME: wrong result on x86
    // name: c2.android.hevc.decoder,c2.qti.hevc.decoder.low_latency,c2.qti.hevc.decoder.secure, OMX.google.hevc.decoder, OMX.qcom.video.decoder.hevc.low_latency, c2.dolby.avc-hevc.decoder, OMX.google.hevc.decoder
     //p->setDecoders(MediaType::Video, {"MediaCodec:ndk_codec=1", "FFmpeg"});
-    p->setDecoders(MediaType::Video, {"AMediaCodec:java=0:copy=0:surface=1:image=1:async=0:low_latency=1", "FFmpeg"});
-
+    p->setDecoders(MediaType::Video, {"AMediaCodec:dv=0:acquire=latest:ndk_codec=1:java=0:copy=0:surface=1:image=1:async=1:low_latency=1", "FFmpeg"});
+    //p->set(ColorSpaceSCRGB);
     p->setLoop(-1);
+    //putenv("GL_YUV_SAMPLER=1");
     return jlong(pr);
 }
 

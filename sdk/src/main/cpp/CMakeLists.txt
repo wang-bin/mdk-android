@@ -36,6 +36,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 # or SHARED, and provides the relative paths to its source code.
 # You can define multiple libraries, and CMake builds them for you.
 # Gradle automatically packages shared libraries with your APK.
+add_link_options(-Wl,-z,max-page-size=16384)
 
 add_library( # Sets the name of the library.
              mdk-jni
@@ -57,4 +58,5 @@ target_link_libraries( # Specifies the target library.
                        mdk
                        # Links the target library to the log library
                        # included in the NDK.
-                       -llog -landroid)
+                       -llog -landroid #-lGLESv2
+              )
