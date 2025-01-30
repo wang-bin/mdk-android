@@ -3,17 +3,17 @@ plugins {
 }
 
 android {
-    compileSdk 34
-    buildToolsVersion '34.0.0'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
 
     defaultConfig {
         applicationId "com.mediadevkit.mdkplayer"
-        minSdkVersion 16
-        targetSdkVersion 33
+        minSdkVersion 21
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -31,7 +31,7 @@ android {
     dependenciesInfo {
         includeInApk true
     }
-    ndkVersion '26.1.10909125'
+    ndkVersion '27.2.12479018'
     // Extract native libraries from the APK
     packagingOptions.jniLibs.useLegacyPackaging true
     namespace 'com.mediadevkit.mdkplayer'
@@ -42,8 +42,8 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.8.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    //androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    //androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     // https://stackoverflow.com/questions/16682847/how-to-manually-include-external-aar-package-using-new-gradle-android-build-syst
     //implementation(name:'sdk-debug', ext:'aar')
     //implementation 'com.mediadevkit.sdk:sdk-debug@aar'

@@ -1,28 +1,42 @@
 package com.mediadevkit.mdkplayer;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.net.Uri;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.VelocityTracker;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.mediadevkit.sdk.MDKPlayer;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+import android.graphics.ColorSpace;
+import android.widget.Switch;
 
 // TODO: render to SurfaceTexture surface. OnFrameAvailable will be called after swapBuffers or data copied? http://blog.csdn.net/king1425/article/details/72773331
 // TODO: request permissions(sdcard) for android 23+
 // AppCompatActivity:  incompatible with android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen" // https://stackoverflow.com/questions/39604889/how-to-fix-you-need-to-use-a-theme-appcompat-theme-or-descendant-with-this-a/39604946
-public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
+public class MainActivity extends AppCompatActivity {
     private SurfaceView mView = null;
     private GLSurfaceView mGLView = null;
     private MDKPlayer mPlayer = null;
@@ -31,10 +45,28 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
     private int mPos = 0;
     private float mX = 0;
     final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener());
+    private ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
+            new ActivityResultCallback<Uri>() {
+                @Override
+                public void onActivityResult(Uri uri) {
+                    // Handle the returned Uri
+                    if (uri == null)
+                        return;
+                    Log.i("MDK.java", "mGetContent: " + uri.toString());
+                    mPlayer.setState(0);
+                    mPlayer.setNextMedia(null);
+                    mPlayer.setMedia(uri.toString());
+                    mPlayer.setState(1);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //getWindow().setColorMode(ActivityInfo.COLOR_MODE_HDR);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Log.i("MDK.Java","getColorMode(): " + getWindow().getColorMode());
+        }
         //this.requestWindowFeature(Window.FEATURE_NO_TITLE); //It's enough to remove the line
         //But if you want to display  full screen (without action bar) write too
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -43,12 +75,37 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
         mPlayer = new MDKPlayer();
         mView = findViewById(R.id.surfaceView);
         mPlayer.setSurfaceView(mView);
-
+        findViewById(R.id.Open).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mGetContent.launch("video/*");
+            }
+        });
+        Button playStopBtn = findViewById(R.id.PlayStop);
+        playStopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                playStopBtn.setText(mPlayer.state() == 0 ? "Play" : "Stop");
+                mPlayer.setState(mPlayer.state() == 0 ? 1 : 0);
+            }
+        });
+        Switch hdr = findViewById(R.id.HDR);
+        hdr.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton btn, boolean isChecked){
+                if (isChecked)
+                    mPlayer.setColorSpace(0);
+                else
+                    mPlayer.setColorSpace(1);
+            }
+        });
+        hdr.setChecked(true);
+/*
         mGLView = findViewById(R.id.glSurfaceView);
         mGLView.setEGLConfigChooser(8, 8, 8, 0, 0, 0);
         mGLView.setEGLContextClientVersion(2);
         mGLView.setRenderer(new DemoRenderer(mPlayer));
-
+*/
         Intent intent = getIntent();
         String action = intent.getAction();
         if (Intent.ACTION_VIEW.equals(action)) {
@@ -58,7 +115,6 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
             //mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/Samsung Chasing The Light Demo.ts");
             //mPlayer.setMedia("https://live.nodemedia.cn:8443/live/b480_265.flv");
             //mPlayer.setMedia("http://192.168.3.168:8888/86831_2158.ts");
-            mPlayer.setMedia("https://vfx.mtime.cn/Video/2021/11/16/mp4/211116131456748178.mp4");//https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4");
             //mPlayer.setMedia("https://www.rmp-streaming.com/media/big-buck-bunny-720p.mp4");
             String[] urls = new String[15];
             for (int i = 0; i < 10; ++i)
@@ -78,7 +134,7 @@ public class MainActivity extends AppCompatActivity /*AppCompatActivity*/{
                     mPlayer.setState(1);
                 return true;
             }
-            public boolean onDoubleTapEvent(MotionEvent e) { return false;}
+            public boolean onDoubleTapEvent(@NonNull MotionEvent e) { return false;}
             public boolean onSingleTapConfirmed(MotionEvent e) {return false;}
         });
     }

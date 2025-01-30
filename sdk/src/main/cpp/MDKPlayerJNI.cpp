@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2024 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2018-2025 WangBin <wbsecg1 at gmail.com>
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -93,6 +93,7 @@ struct PlayerRef {
 
     Player* player = new Player();
     std::shared_ptr<jobject> spobj;
+    jobject surface = nullptr;
 };
 
 Player* get(jlong obj_ptr) {
@@ -141,14 +142,15 @@ MDK_JNI(jlong, MDKPlayer_nativeCreate)
         }
         return false;
     });
-    //p->setAudioBackends({"AudioTrack", "OpenSL"});
+    //p->setActiveTracks(MediaType::Audio, {});
+    //p->setAudioBackends({ "OpenSL"});
     //p->setDecoders(MediaType::Audio, {"AMediaCodec:java=0", "FFmpeg"}); // AMediaCodec: higher cpu? FIXME: wrong result on x86
    // name: c2.android.hevc.decoder,c2.qti.hevc.decoder.low_latency,c2.qti.hevc.decoder.secure, OMX.google.hevc.decoder, OMX.qcom.video.decoder.hevc.low_latency, c2.dolby.avc-hevc.decoder, OMX.google.hevc.decoder
     //p->setDecoders(MediaType::Video, {"MediaCodec:ndk_codec=1", "FFmpeg"});
     p->setDecoders(MediaType::Video, {"AMediaCodec:dv=0:acquire=latest:ndk_codec=1:java=0:copy=0:surface=1:image=1:async=1:low_latency=1", "FFmpeg"});
-    //p->set(ColorSpaceSCRGB);
-    p->setLoop(-1);
-    //putenv("GL_YUV_SAMPLER=1");
+    //putenv("EGL_HDR_METADATA=0");
+    putenv("GL_YUV_SAMPLER=1");
+    //putenv("LOG_SHADER=1");
     return jlong(pr);
 }
 
@@ -159,14 +161,22 @@ MDK_JNI(void, MDKPlayer_nativeDestroy)
 
 MDK_JNI(void, MDKPlayer_nativeSetMedia, jstring url)
 {
-    const char* s = env->GetStringUTFChars(url, 0);
+    if (!url) {
+        get(obj_ptr)->setMedia(nullptr);
+        return;
+    }
+    const char* s = env->GetStringUTFChars(url, nullptr);
     get(obj_ptr)->setMedia(s);
     env->ReleaseStringUTFChars(url, s);
 }
 
 MDK_JNI(void, MDKPlayer_nativeSetNextMedia, jstring url)
 {
-    const char* s = env->GetStringUTFChars(url, 0);
+    if (!url) {
+        get(obj_ptr)->setNextMedia(nullptr);
+        return;
+    }
+    const char* s = env->GetStringUTFChars(url, nullptr);
     get(obj_ptr)->setNextMedia(s);
     env->ReleaseStringUTFChars(url, s);
 }
@@ -178,7 +188,7 @@ MDK_JNI(void, MDKPlayer_nativeSetPlayList, jobjectArray urls)
     jsize len = env->GetArrayLength(urls);
     for (jsize i = 0; i < len; ++i) {
         auto si = (jstring)env->GetObjectArrayElement(urls, i);
-        const char* s = env->GetStringUTFChars(si, 0);
+        const char* s = env->GetStringUTFChars(si, nullptr);
         url_list->push_back(s);
         env->ReleaseStringUTFChars(si, s);
     }
@@ -251,6 +261,7 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
 # endif
     p->updateNativeSurface(s, w, h);
 #endif
+    reinterpret_cast<PlayerRef*>(obj_ptr)->surface = s;
     return (jlong)s;
 }
 
@@ -276,5 +287,13 @@ MDK_JNI(void, MDKPlayer_nativeSeek, jint ms)
         return;
     auto p = get(obj_ptr);
     p->seek(ms);
+}
+
+MDK_JNI(void, MDKPlayer_nativeSetColorSpace, jint value)
+{
+    auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
+    auto p = get(obj_ptr);
+    p->set(ColorSpace(value)); // store default value globally, will be used if surface is changed
+    p->set(ColorSpace(value), r->surface); // apply for current surface
 }
 }
