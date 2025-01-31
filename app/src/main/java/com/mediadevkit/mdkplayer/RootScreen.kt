@@ -1,5 +1,7 @@
 package com.mediadevkit.mdkplayer
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,6 +15,17 @@ fun RootScreen(
 ) {
   var decodeToSurfaceView by remember { mutableStateOf(false) }
   val (getUrl, setUrl) = remember { mutableStateOf("https://github.com/ietf-wg-cellar/matroska-test-files/raw/master/test_files/test5.mkv") }
+
+  val intentLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.GetContent(),
+    onResult = { uri ->
+      if (uri == null) return@rememberLauncherForActivityResult
+      Navigator.currentScreen = Screen.Player(
+        url = uri.toString(),
+        config = KotlinPlayer.Config(decodeToSurfaceView),
+      )
+    }
+  )
   Column(
     modifier = modifier
       .fillMaxSize(),
@@ -32,9 +45,7 @@ fun RootScreen(
         }
       )
       Button(
-        onClick = {
-
-        },
+        onClick = { intentLauncher.launch("video/*") },
         content = { Text("Open file") }
       )
       HorizontalDivider()
