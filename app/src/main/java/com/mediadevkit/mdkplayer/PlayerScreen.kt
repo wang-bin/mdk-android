@@ -164,10 +164,12 @@ fun PlayerScreen(
             }
           )
           IconButton(
+            enabled = state.mediaInfo?.audio?.isNotEmpty() == true,
             onClick = { type = MediaType.Audio },
             content = { Icon(Icons.Default.Audiotrack, null) }
           )
           IconButton(
+            enabled = state.mediaInfo?.subtitles?.isNotEmpty() == true,
             onClick = { type = MediaType.Subtitles },
             content = { Icon(Icons.Default.ClosedCaption, null) }
           )
