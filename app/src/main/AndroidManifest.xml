@@ -4,17 +4,14 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="MDK 1 player renders on 2 views"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MDKPlayer"
-        >
+        android:theme="@style/Theme.Mdk"
+        android:icon="@mipmap/ic_launcher">
+
         <activity android:name=".MainActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true"
-            android:colorMode="hdr"
-            >
+            android:colorMode="hdr">
             <meta-data android:name="com.android.graphics.injectLayers.enable"
                 android:value="true"/>
             <intent-filter>
