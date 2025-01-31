@@ -9,12 +9,13 @@ import androidx.compose.ui.*
 import androidx.compose.ui.unit.dp
 import com.mediadevkit.sdk.KotlinPlayer
 
+var decodeToSurfaceView by mutableStateOf(false)
+
 @Composable
 fun RootScreen(
   modifier: Modifier = Modifier,
 ) {
-  var decodeToSurfaceView by remember { mutableStateOf(false) }
-  val (getUrl, setUrl) = remember { mutableStateOf("https://github.com/ietf-wg-cellar/matroska-test-files/raw/master/test_files/test5.mkv") }
+  val (getUrl, setUrl) = remember { mutableStateOf(defaultUrl) }
 
   val intentLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.GetContent(),
@@ -105,4 +106,5 @@ fun RootScreen(
 //BL_RPU_dvhe-08-mapDynamic1000-81_3840x2160@24fps_0_6313.mp4
 
 val baseUrl = "https://media.githubusercontent.com/media/DolbyLaboratories/dolby-vision-contents/refs/heads/main/SolLevante_Netflix/{FILE}?download=true"
-val defaultUrl = baseUrl.replace("{FILE}", "BL_RPU_dvhe-08-mapDynamic1000-81_1920x1080@24fps_0_6313.mp4")
+//val defaultUrl = baseUrl.replace("{FILE}", "BL_RPU_dvhe-08-mapDynamic1000-81_1920x1080@24fps_0_6313.mp4")
+val defaultUrl = "https://github.com/ietf-wg-cellar/matroska-test-files/raw/master/test_files/test5.mkv"

@@ -1,6 +1,10 @@
 package com.mediadevkit.mdkplayer
 
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.view.SurfaceView
+import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -23,6 +27,7 @@ fun PlayerScreen(
   url: String,
   config: KotlinPlayer.Config,
 ) {
+  val activity = LocalActivity.current
   val player = remember { KotlinPlayer(config) }
   val state = rememberPlayerState(player)
   var userValue by remember { mutableFloatStateOf(0f) }
@@ -141,6 +146,12 @@ fun PlayerScreen(
             onClick = {
               state.hdr = !state.hdr
               player.hdr = state.hdr
+              if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                activity?.window?.colorMode = when {
+                  state.hdr -> ActivityInfo.COLOR_MODE_HDR
+                  else -> ActivityInfo.COLOR_MODE_DEFAULT
+                }
+              }
             },
             content = {
               Icon(
@@ -263,7 +274,10 @@ fun TracksDialog(
           shape = MaterialTheme.shapes.medium,
           content = {
             Column(
-              modifier = Modifier.fillMaxSize(),
+              modifier = Modifier.fillMaxSize()
+                .verticalScroll(
+                  state = rememberScrollState()
+                ),
               content = {
                 for (index in tracks.indices) {
                   val track = tracks[index]
@@ -279,16 +293,21 @@ fun TracksDialog(
                   Row(
                     modifier = Modifier
                       .fillMaxWidth()
-                      .padding(8.dp),
+                      .clickable {
+                        onClick.invoke(index, track)
+                      }
+                      .padding(16.dp),
                     content = {
                       Text(
                         modifier = Modifier.weight(1f),
                         text = "Track ${track.index}"
                       )
-                      RadioButton(
-                        selected = isSelected,
-                        onClick = { onClick.invoke(index, track) },
-                      )
+                      if (isSelected) {
+                        Icon(
+                          imageVector = Icons.Default.Check,
+                          contentDescription = null,
+                        )
+                      }
                     }
                   )
                 }

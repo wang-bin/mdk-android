@@ -32,10 +32,13 @@ class KotlinPlayer(private val config: Config) {
     }
   }
 
+  /**
+   * if set subtitle track with decodeToSurfaceView == true && AMediaCodec:async=1: freeze
+   */
   init {
     LibMdk.setListener(nativeHandle, listener)
     val videoDecoders = listOf(
-      "AMediaCodec:dv=1:acquire=latest:ndk_codec=1:java=0:copy=0:surface=1:image=1:async=0:low_latency=1",
+      "AMediaCodec:dv=1:acquire=latest:ndk_codec=1:java=0:copy=0:surface=1:image=1:async=1:low_latency=1",
       "FFmpeg",
     )
     LibMdk.setProperty(
