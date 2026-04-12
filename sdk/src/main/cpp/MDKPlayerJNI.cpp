@@ -305,4 +305,15 @@ MDK_JNI(void, MDKPlayer_nativeSetAudioBackends, jstring backends)
     get(obj_ptr)->setAudioBackends({s});
     env->ReleaseStringUTFChars(backends, s);
 }
+
+MDK_JNI(void, MDKPlayer_nativeSetProperty, jstring key, jstring value)
+{
+    if (!key || !value)
+        return;
+    const char* k = env->GetStringUTFChars(key, nullptr);
+    const char* v = env->GetStringUTFChars(value, nullptr);
+    get(obj_ptr)->setProperty(k, v);
+    env->ReleaseStringUTFChars(key, k);
+    env->ReleaseStringUTFChars(value, v);
+}
 }
