@@ -296,4 +296,13 @@ MDK_JNI(void, MDKPlayer_nativeSetColorSpace, jint value)
     p->set(ColorSpace(value)); // store default value globally, will be used if surface is changed
     p->set(ColorSpace(value), r->surface); // apply for current surface
 }
+
+MDK_JNI(void, MDKPlayer_nativeSetAudioBackends, jstring backends)
+{
+    if (!backends)
+        return;
+    const char* s = env->GetStringUTFChars(backends, nullptr);
+    get(obj_ptr)->setAudioBackends({s});
+    env->ReleaseStringUTFChars(backends, s);
+}
 }
