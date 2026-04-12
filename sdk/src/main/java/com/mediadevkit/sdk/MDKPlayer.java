@@ -43,6 +43,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
     public int getDuration() { return nativeGetDuration(native_ptr); }
 
     public void setColorSpace(int value) { nativeSetColorSpace(native_ptr, value);}
+    public void setAudioBackend(String backend) { nativeSetAudioBackends(native_ptr, backend); }
 
     protected void finalize() {
         nativeDestroy(native_ptr);
@@ -114,6 +115,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
     private native void nativeSeek(long obj_ptr, int msec);
 
     private native void nativeSetColorSpace(long obj_ptr, int value);
+    private native void nativeSetAudioBackends(long obj_ptr, String backends);
 
     static {
         // android 4.2 linker can not load dependencies in apk, so manually load them

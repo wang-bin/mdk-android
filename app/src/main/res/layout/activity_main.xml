@@ -47,13 +47,12 @@
                 android:layout_weight="1"
                 android:text="HW" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/spinner2"
+            <Spinner
+                android:id="@+id/audioBackendSpinner"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_weight="1" >
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                android:layout_weight="1"
+                android:entries="@array/audio_backends" />
 
             <Switch
                 android:id="@+id/HDR"
