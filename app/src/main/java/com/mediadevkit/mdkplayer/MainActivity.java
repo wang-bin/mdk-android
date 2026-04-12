@@ -12,7 +12,6 @@ import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
-import android.view.VelocityTracker;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -43,10 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private SurfaceView mView = null;
     private GLSurfaceView mGLView = null;
     private MDKPlayer mPlayer = null;
-    private VelocityTracker mVelocityTracker = null;
-    private int mState = 0;
-    private int mPos = 0;
-    private float mX = 0;
+    private boolean mIsFullscreen = false;
     private SeekBar mSeekBar = null;
     private boolean mIsSeeking = false;
     private final Handler mProgressHandler = new Handler(android.os.Looper.getMainLooper());
@@ -162,11 +158,10 @@ public class MainActivity extends AppCompatActivity {
 
         gestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener(){
             public boolean onDoubleTap(MotionEvent e) {
-                //Log.i("MDK.Java","onDoubleTap e.getX(): " + e.getX());
-                if (mPlayer.state() == 1)
-                    mPlayer.setState(2);
-                else
-                    mPlayer.setState(1);
+                mIsFullscreen = !mIsFullscreen;
+                setRequestedOrientation(mIsFullscreen
+                        ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                        : ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
                 return true;
             }
             public boolean onDoubleTapEvent(@NonNull MotionEvent e) { return false;}
@@ -202,48 +197,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
         gestureDetector.onTouchEvent(event);
-        int action = event.getActionMasked();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                mX = event.getX();
-                mPos = mPlayer.position();
-                mState = mPlayer.state();
-                if (mState == 0)
-                    mState = 1;
-                //Log.i("MDK.Java","DOWN event.getX(): " + event.getX() + " mPos:" + mPos);
-                if (mVelocityTracker == null)
-                    mVelocityTracker = VelocityTracker.obtain();
-                mVelocityTracker.clear();
-                mVelocityTracker.addMovement(event);
-            }
-            break;
-            case MotionEvent.ACTION_MOVE: {
-                mVelocityTracker.addMovement(event);
-                mVelocityTracker.computeCurrentVelocity(1000);
-                float dx = event.getX() - mX;
-                if (dx > 20) { // TODO: depends on duration and screen size, not velocity
-                    mPos += 1000;
-                    mX = event.getX();
-                } else if (dx < -20) {
-                    mPos -= 1000;
-                    mX = event.getX();
-                }
-                //Log.i("MDK.Java","MOVE event.getX(): " + event.getX() + " mPos:" + mPos);
-                if (mPos > 0)
-                    mPlayer.seek(mPos);
-                //Log.i("MDK.Java","velocityTraker: "+mVelocityTracker.getXVelocity());
-            }
-            break;
-            case MotionEvent.ACTION_UP:
-                mPlayer.setState(mState);
-                //Log.i("MDK.Java","UP event.getX(): " + event.getX());
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                mVelocityTracker.recycle();
-                break;
-            default:
-                break;
-        }
         return true;
     }
     static class DemoRenderer implements GLSurfaceView.Renderer {
