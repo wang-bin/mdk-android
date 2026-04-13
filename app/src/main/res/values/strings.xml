@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MDKPlayer</string>
+    <string-array name="audio_backends">
+        <item>AAudio</item>
+        <item>OpenSL</item>
+        <item>AudioTrack</item>
+    </string-array>
 </resources>

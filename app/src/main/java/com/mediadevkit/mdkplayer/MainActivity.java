@@ -12,19 +12,23 @@ import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
-import android.view.VelocityTracker;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
+import android.widget.SeekBar;
+import android.widget.Spinner;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.os.Handler;
 
 import com.mediadevkit.sdk.MDKPlayer;
 
@@ -40,10 +44,24 @@ public class MainActivity extends AppCompatActivity {
     private SurfaceView mView = null;
     private GLSurfaceView mGLView = null;
     private MDKPlayer mPlayer = null;
-    private VelocityTracker mVelocityTracker = null;
-    private int mState = 0;
-    private int mPos = 0;
-    private float mX = 0;
+    private boolean mIsFullscreen = false;
+    private SeekBar mSeekBar = null;
+    private boolean mIsSeeking = false;
+    private final Handler mProgressHandler = new Handler(android.os.Looper.getMainLooper());
+    private final Runnable mProgressUpdater = new Runnable() {
+        @Override
+        public void run() {
+            if (mPlayer != null && mSeekBar != null && !mIsSeeking) {
+                int duration = mPlayer.getDuration();
+                if (duration > 0) {
+                    if (mSeekBar.getMax() != duration)
+                        mSeekBar.setMax(duration);
+                    mSeekBar.setProgress(mPlayer.position());
+                }
+            }
+            mProgressHandler.postDelayed(this, 500);
+        }
+    };
     final GestureDetector gestureDetector = new GestureDetector(new GestureDetector.SimpleOnGestureListener());
     private ActivityResultLauncher<String> mGetContent = registerForActivityResult(new ActivityResultContracts.GetContent(),
             new ActivityResultCallback<Uri>() {
@@ -100,6 +118,30 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         hdr.setChecked(true);
+        Spinner audioBackendSpinner = findViewById(R.id.audioBackendSpinner);
+        audioBackendSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                mPlayer.setAudioBackend((String) parent.getItemAtPosition(position));
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+        mSeekBar = findViewById(R.id.seekBar);
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mIsSeeking = true;
+            }
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                mPlayer.seek(seekBar.getProgress());
+                mIsSeeking = false;
+            }
+        });
 /*
         mGLView = findViewById(R.id.glSurfaceView);
         mGLView.setEGLConfigChooser(8, 8, 8, 0, 0, 0);
@@ -127,21 +169,27 @@ public class MainActivity extends AppCompatActivity {
 
         gestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener(){
             public boolean onDoubleTap(MotionEvent e) {
-                //Log.i("MDK.Java","onDoubleTap e.getX(): " + e.getX());
+                mIsFullscreen = !mIsFullscreen;
+                setRequestedOrientation(mIsFullscreen
+                        ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                        : ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+                return true;
+            }
+            public boolean onDoubleTapEvent(@NonNull MotionEvent e) { return false;}
+            public boolean onSingleTapConfirmed(MotionEvent e) {
                 if (mPlayer.state() == 1)
                     mPlayer.setState(2);
                 else
                     mPlayer.setState(1);
                 return true;
             }
-            public boolean onDoubleTapEvent(@NonNull MotionEvent e) { return false;}
-            public boolean onSingleTapConfirmed(MotionEvent e) {return false;}
         });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        mProgressHandler.removeCallbacks(mProgressUpdater);
         //mView.setVisibility(View.GONE);
         mPlayer.setState(2);
         // if not set null here, surface holder will be destroyed too, but SurfaceHolder store in player class will not change when calling mPlayer.setSurfaceView(mView) in onResume() and surface is not updated in native
@@ -154,58 +202,12 @@ public class MainActivity extends AppCompatActivity {
         //mView.setVisibility(View.VISIBLE);
         mPlayer.setState(1);
         mPlayer.setSurfaceView(mView); // ensure vo is created
+        mProgressHandler.post(mProgressUpdater);
     }
 
     @Override
     public boolean onTouchEvent(final MotionEvent event) {
         gestureDetector.onTouchEvent(event);
-        int action = event.getActionMasked();
-        switch (action) {
-            case MotionEvent.ACTION_DOWN: {
-                mX = event.getX();
-                mPos = mPlayer.position();
-                mState = mPlayer.state();
-                if (mState == 0)
-                    mState = 1;
-                //Log.i("MDK.Java","DOWN event.getX(): " + event.getX() + " mPos:" + mPos);
-                //mPlayer.setState(2);
-                if (mState == 1)
-                    mPlayer.setState(2);
-                else
-                    mPlayer.setState(1);
-                if (mVelocityTracker == null)
-                    mVelocityTracker = VelocityTracker.obtain();
-                mVelocityTracker.clear();
-                mVelocityTracker.addMovement(event);
-            }
-            break;
-            case MotionEvent.ACTION_MOVE: {
-                mVelocityTracker.addMovement(event);
-                mVelocityTracker.computeCurrentVelocity(1000);
-                float dx = event.getX() - mX;
-                if (dx > 20) { // TODO: depends on duration and screen size, not velocity
-                    mPos += 1000;
-                    mX = event.getX();
-                } else if (dx < -20) {
-                    mPos -= 1000;
-                    mX = event.getX();
-                }
-                //Log.i("MDK.Java","MOVE event.getX(): " + event.getX() + " mPos:" + mPos);
-                if (mPos > 0)
-                    mPlayer.seek(mPos);
-                //Log.i("MDK.Java","velocityTraker: "+mVelocityTracker.getXVelocity());
-            }
-            break;
-            case MotionEvent.ACTION_UP:
-                //mPlayer.setState(mState);
-                //Log.i("MDK.Java","UP event.getX(): " + event.getX());
-                break;
-            case MotionEvent.ACTION_CANCEL:
-                mVelocityTracker.recycle();
-                break;
-            default:
-                break;
-        }
         return true;
     }
     static class DemoRenderer implements GLSurfaceView.Renderer {
