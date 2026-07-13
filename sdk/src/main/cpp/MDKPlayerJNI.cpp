@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2025 WangBin <wbsecg1 at gmail.com>
+ * Copyright (c) 2018-2026 WangBin <wbsecg1 at gmail.com>
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -57,6 +57,7 @@ extern "C" {
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
+    //putenv("EGL_SDR_DEPTH=8");
     //freopen("/sdcard/log.txt", "wta", stdout); // java.lang.IllegalArgumentException: Primary directory null not allowed for content://media/external_primary/file; allowed directories are [Download, Documents] filePath = /storage/emulated/0/loge.txt callingPackageName = com.mediadevkit.mdkplayer
     //freopen("/sdcard/loge.txt", "w", stderr);
     setLogHandler([](LogLevel v, const char* msg){
@@ -69,7 +70,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
     SetGlobalOption("profiler.gpu", 1);
     SetGlobalOption("logLevel", "all");
 
-    std::clog << "JNI_OnLoad" << std::endl;
+    __android_log_print(ANDROID_LOG_DEBUG, "MDK-JNI", "JNI_OnLoad");
     JNIEnv* env = nullptr;
     if (vm->GetEnv((void**) &env, JNI_VERSION_1_4) != JNI_OK || !env) {
         std::clog << "GetEnv for JNI_VERSION_1_4 failed" << std::endl;
@@ -243,7 +244,9 @@ MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
         //ANativeWindow* anw = s ? ANativeWindow_fromSurface(env, s) : nullptr; // TODO: release
         //p->setProperty("video.decoder", "window=" + std::to_string((intptr_t)anw));
         auto ss = (jobject)env->NewGlobalRef(s); // TODO: release
-        p->setProperty("video.decoder", "surface=" + std::to_string((intptr_t)ss));
+        // recreate decoder, decode to a new surface
+        // image=0 is required, otherwise will decode to AImageReader
+        p->setDecoders(MediaType::Video, {"AMediaCodec:async=1:dv=1:image=0:surface=" + std::to_string((intptr_t)ss)});
     }
 #else
 # if (USE_VULKAN + 0)
