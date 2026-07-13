@@ -1,7 +1,9 @@
 package com.mediadevkit.mdkplayer;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
@@ -27,6 +29,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import android.os.Handler;
 
@@ -157,7 +161,8 @@ public class MainActivity extends AppCompatActivity {
             //mPlayer.setMedia(Environment.getExternalStorageDirectory().toString() + "/Movies/Samsung Chasing The Light Demo.ts");
             //mPlayer.setMedia("https://live.nodemedia.cn:8443/live/b480_265.flv");
             //mPlayer.setMedia("http://192.168.3.168:8888/86831_2158.ts");
-            //mPlayer.setMedia("https://www.rmp-streaming.com/media/big-buck-bunny-720p.mp4");
+            //mPlayer.setMedia("https://ks3-cn-beijing.ksyun.com/ksplayer/h265/mp4_resource/jinjie_265.mp4");
+            //mPlayer.setMedia("https://ks3-cn-beijing.ksyun.com/ksplayer/h265/outside_demo/v1.1.3/720P2M30fpsh265-wasmtest.flv");
             String[] urls = new String[15];
             for (int i = 0; i < 10; ++i)
                 urls[i] = "/sdcard/Movies/s/s0" + i + ".mkv";
@@ -166,7 +171,7 @@ public class MainActivity extends AppCompatActivity {
             //mPlayer.setPlayList(urls);
         }
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-
+       // mPlayer.setMedia("avdevice://android_camera");
         gestureDetector.setOnDoubleTapListener(new GestureDetector.OnDoubleTapListener(){
             public boolean onDoubleTap(MotionEvent e) {
                 mIsFullscreen = !mIsFullscreen;
@@ -184,8 +189,38 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         });
+
+        String[] permissions = {Manifest.permission.CAMERA};
+
+        boolean allPermissionsGranted = true;
+
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                allPermissionsGranted = false;
+                break;
+            }
+        }
+        if(!allPermissionsGranted)
+            ActivityCompat.requestPermissions(this, permissions, 111);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 111: {
+                // 如果请求被取消，则结果数组为空。
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // 权限被授予，可以继续在这里执行相应的操作
+                } else {
+                    // 权限被拒绝，可以进行一些提示或者引导用户去设置页面开启权限
+                }
+                return;
+            }
+        }
+    }
     @Override
     protected void onPause() {
         super.onPause();

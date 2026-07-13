@@ -3,13 +3,12 @@ plugins {
 }
 
 android {
-    compileSdk 35
-    buildToolsVersion '35.0.0'
-
+    compileSdk 36
+    buildToolsVersion '36.1.0'
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 36
 
 //        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -23,9 +22,9 @@ android {
         ndk {
             // Specifies the ABI configurations of your native
             // libraries Gradle should build and package with your APK.
-            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            abiFilters 'arm64-v8a'//, 'armeabi-v7a', 'x86', 'x86_64'
         }
-        ndkVersion "27.2.12479018"
+        ndkVersion "29.0.14206865"
     }
 
     buildTypes {
@@ -38,14 +37,14 @@ android {
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
-            version "3.31.2"
+            version "4.3.1"
         }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11
         targetCompatibility JavaVersion.VERSION_11
     }
-    ndkVersion '27.2.12479018'
+    ndkVersion '29.0.14206865'
     packagingOptions {
         jniLibs {
             useLegacyPackaging true
@@ -56,8 +55,8 @@ android {
 
 dependencies {
 
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.12.0'
     //androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     //androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }
