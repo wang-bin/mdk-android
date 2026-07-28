@@ -122,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         hdr.setChecked(true);
+        Switch tunnel = findViewById(R.id.Tunnel);
+        tunnel.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton btn, boolean isChecked) {
+                mPlayer.setTunnel(isChecked);
+            }
+        });
         Spinner audioBackendSpinner = findViewById(R.id.audioBackendSpinner);
         audioBackendSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override

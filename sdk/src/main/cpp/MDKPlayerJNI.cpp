@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2026 WangBin <wbsecg1 at gmail.com>
+ * AI participated
  */
 #include "jmi/jmi.h"
 #include <jni.h>
@@ -11,7 +12,6 @@
 #include <list>
 #include <string>
 #include <iostream>
-#define  DECODE_TO_SURFACEVIEW 0
 #define USE_VULKAN 0
 
 enum { // custom enum
@@ -90,16 +90,48 @@ void JNI_OnUnload(JavaVM* vm, void* reserved)
 struct PlayerRef {
     ~PlayerRef() {
         delete player;
+        if (surface)
+            jmi::getEnv()->DeleteGlobalRef(surface);
     }
 
     Player* player = new Player();
     std::shared_ptr<jobject> spobj;
-    jobject surface = nullptr;
+    jobject surface = nullptr; // GlobalRef
+    int width = 0;
+    int height = 0;
+    bool tunnel = false;
 };
 
 Player* get(jlong obj_ptr) {
     auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
     return r->player;
+}
+
+static void ApplySurface(PlayerRef* r)
+{
+    auto p = r->player;
+    if (r->tunnel) {
+        p->updateNativeSurface(nullptr, 0, 0); // surface was used by renderer, now to be used by decoder
+        if (r->surface) {
+            //ANativeWindow* anw = ANativeWindow_fromSurface(env, r->surface); // TODO: release
+            //p->setProperty("video.decoder", "window=" + std::to_string((intptr_t)anw));
+            // recreate decoder, decode to a new surface
+            // image=0 is required, otherwise will decode to AImageReader
+            p->setDecoders(MediaType::Video, {"AMediaCodec:async=1:dv=1:image=0:surface=" + std::to_string((intptr_t)r->surface)});
+        }
+    } else {
+        p->setDecoders(MediaType::Video, {"AMediaCodec:dv=0:acquire=latest:ndk_codec=1:java=0:copy=0:surface=1:image=1:async=1:low_latency=1", "FFmpeg"});
+# if (USE_VULKAN + 0)
+        p->setProperty("video.decoder", "surface=0"); // surface is not supported yet
+        if (r->width <= 0 || r->height <= 0) // TODO: required by vk. BUS_ADRALN
+            return;
+        VulkanRenderAPI vkra{};
+        //vkra.debug = 1; // crash if no layer found
+        std::clog << r->width << "x" << r->height << "device_index: " << vkra.device_index << std::endl;
+        p->setRenderAPI(&vkra, r->surface);
+# endif
+        p->updateNativeSurface(r->surface, r->width, r->height);
+    }
 }
 
 #define MDK_JNI_FUNC(Name) Java_com_mediadevkit_sdk_##Name
@@ -221,50 +253,41 @@ MDK_JNI(jint, MDKPlayer_nativeState)
 
 MDK_JNI(void, MDKPlayer_nativeResizeVideoSurface, int width, int height)
 {
-#if !(DECODE_TO_SURFACEVIEW + 0)
-    get(obj_ptr)->setVideoSurfaceSize(width, height);
-#endif
+    auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
+    if (!r->tunnel)
+        r->player->setVideoSurfaceSize(width, height);
 }
 
 MDK_JNI(void, MDKPlayer_nativeRenderVideo)
 {
-#if !(DECODE_TO_SURFACEVIEW + 0)
-    get(obj_ptr)->renderVideo();
-#endif
+    auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
+    if (!r->tunnel)
+        r->player->renderVideo();
+}
+
+MDK_JNI(void, MDKPlayer_nativeSetTunnel, jboolean tunnel)
+{
+    auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
+    r->tunnel = tunnel;
+    if (r->surface)
+        ApplySurface(r);
 }
 
 MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)
 {
-    std::cout << "~~~~~~~~~~~nativeSetSurface: " << s <<  std::endl;
     if (!obj_ptr)
         return 0; // called in surfaceDestroyed when player was already destroyed in onPause
-    auto p = get(obj_ptr);
-#if (DECODE_TO_SURFACEVIEW + 0)
-    if (s) {
-        //ANativeWindow* anw = s ? ANativeWindow_fromSurface(env, s) : nullptr; // TODO: release
-        //p->setProperty("video.decoder", "window=" + std::to_string((intptr_t)anw));
-        auto ss = (jobject)env->NewGlobalRef(s); // TODO: release
-        // recreate decoder, decode to a new surface
-        // image=0 is required, otherwise will decode to AImageReader
-        p->setDecoders(MediaType::Video, {"AMediaCodec:async=1:dv=1:image=0:surface=" + std::to_string((intptr_t)ss)});
+    auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
+    std::cout << "~~~~~~~~~~~nativeSetSurface: " << s << " tunnel: " << r->tunnel << std::endl;
+    if (r->surface) {
+        env->DeleteGlobalRef(r->surface);
+        r->surface = nullptr;
     }
-#else
-# if (USE_VULKAN + 0)
-    p->setProperty("video.decoder", "surface=0"); // surface is not supported yet
-    static jobject ss = nullptr;
-    //if (ss)
-    //    return (jlong)s;
-    if (w <= 0 || h <= 0) // TODO: required by vk. BUS_ADRALN
-        return (jlong)s;
-    ss = s;
-    VulkanRenderAPI vkra{};
-    //vkra.debug = 1; // crash if no layer found
-    std::clog << w << "x" << h << "device_index: " << vkra.device_index << std::endl;
-    p->setRenderAPI(&vkra, s);
-# endif
-    p->updateNativeSurface(s, w, h);
-#endif
-    reinterpret_cast<PlayerRef*>(obj_ptr)->surface = s;
+    if (s)
+        r->surface = env->NewGlobalRef(s);
+    r->width = w;
+    r->height = h;
+    ApplySurface(r);
     return (jlong)s;
 }
 

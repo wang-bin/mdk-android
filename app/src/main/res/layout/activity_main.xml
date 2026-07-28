@@ -21,7 +21,7 @@
         <SurfaceView
             android:id="@+id/surfaceView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1" />
 
         <SeekBar
@@ -34,11 +34,12 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/PlayStop"
+            <Switch
+                android:id="@+id/Tunnel"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:text="Stop" />
+                android:layout_weight="1"
+                android:text="Tunnel" />
 
             <Switch
                 android:id="@+id/HW"
@@ -46,6 +47,18 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="HW" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/PlayStop"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:text="Stop" />
 
             <Spinner
                 android:id="@+id/audioBackendSpinner"

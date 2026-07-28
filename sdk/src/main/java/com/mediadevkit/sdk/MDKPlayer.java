@@ -46,6 +46,12 @@ public class MDKPlayer implements SurfaceHolder.Callback {
     public void setAudioBackend(String backend) { nativeSetAudioBackends(native_ptr, backend); }
     public void setProperty(String key, String value) { nativeSetProperty(native_ptr, key, value); }
 
+    public void setTunnel(boolean value) {
+        if (native_ptr == 0)
+            return;
+        nativeSetTunnel(native_ptr, value);
+    }
+
     protected void finalize() {
         nativeDestroy(native_ptr);
         native_ptr = 0;
@@ -108,6 +114,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
     private native int nativeState(long obj_ptr);
     private native void nativeResizeVideoSurface(long obj_ptr, int width, int height);
     private native void nativeRenderVideo(long obj_ptr);
+    private native void nativeSetTunnel(long obj_ptr, boolean tunnel);
 
     private native long nativeSetSurface(long obj_ptr, Surface surface, long win, int w, int h);
 
