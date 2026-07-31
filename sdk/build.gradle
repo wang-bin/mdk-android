@@ -3,12 +3,11 @@ plugins {
 }
 
 android {
-    compileSdk 36
+    compileSdk 37
     buildToolsVersion '36.1.0'
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 36
 
 //        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
@@ -51,6 +50,12 @@ android {
         }
     }
     namespace 'com.mediadevkit.sdk'
+    lint {
+        targetSdk 36
+    }
+    testOptions {
+        targetSdk 36
+    }
 }
 
 dependencies {
