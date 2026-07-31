@@ -42,6 +42,13 @@
                 android:text="Tunnel" />
 
             <Switch
+                android:id="@+id/Vulkan"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Vulkan" />
+
+            <Switch
                 android:id="@+id/HW"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"

@@ -52,6 +52,12 @@ public class MDKPlayer implements SurfaceHolder.Callback {
         nativeSetTunnel(native_ptr, value);
     }
 
+    public void setVulkan(boolean value) {
+        if (native_ptr == 0)
+            return;
+        nativeSetVulkan(native_ptr, value);
+    }
+
     protected void finalize() {
         nativeDestroy(native_ptr);
         native_ptr = 0;
@@ -115,6 +121,7 @@ public class MDKPlayer implements SurfaceHolder.Callback {
     private native void nativeResizeVideoSurface(long obj_ptr, int width, int height);
     private native void nativeRenderVideo(long obj_ptr);
     private native void nativeSetTunnel(long obj_ptr, boolean tunnel);
+    private native void nativeSetVulkan(long obj_ptr, boolean vulkan);
 
     private native long nativeSetSurface(long obj_ptr, Surface surface, long win, int w, int h);
 

@@ -12,7 +12,6 @@
 #include <list>
 #include <string>
 #include <iostream>
-#define USE_VULKAN 0
 
 enum { // custom enum
     MEDIA_ERROR = -1,
@@ -100,6 +99,7 @@ struct PlayerRef {
     int width = 0;
     int height = 0;
     bool tunnel = false;
+    bool vulkan = false;
 };
 
 Player* get(jlong obj_ptr) {
@@ -107,9 +107,11 @@ Player* get(jlong obj_ptr) {
     return r->player;
 }
 
-static void ApplySurface(PlayerRef* r)
+static void ApplySurface(PlayerRef* r, bool destroySurface = false)
 {
     auto p = r->player;
+    if (destroySurface)
+        p->updateNativeSurface(nullptr, 0, 0);
     if (r->tunnel) {
         p->updateNativeSurface(nullptr, 0, 0); // surface was used by renderer, now to be used by decoder
         if (r->surface) {
@@ -121,15 +123,15 @@ static void ApplySurface(PlayerRef* r)
         }
     } else {
         p->setDecoders(MediaType::Video, {"AMediaCodec:dv=0:acquire=latest:ndk_codec=1:java=0:copy=0:surface=1:image=1:async=1:low_latency=1", "FFmpeg"});
-# if (USE_VULKAN + 0)
-        p->setProperty("video.decoder", "surface=0"); // surface is not supported yet
-        if (r->width <= 0 || r->height <= 0) // TODO: required by vk. BUS_ADRALN
-            return;
-        VulkanRenderAPI vkra{};
-        //vkra.debug = 1; // crash if no layer found
-        std::clog << r->width << "x" << r->height << "device_index: " << vkra.device_index << std::endl;
-        p->setRenderAPI(&vkra, r->surface);
-# endif
+        if (r->vulkan) {
+            p->setProperty("video.decoder", "surface=0"); // surface is not supported yet
+            if (r->width <= 0 || r->height <= 0) // TODO: required by vk. BUS_ADRALN
+                return;
+            VulkanRenderAPI vkra{};
+            //vkra.debug = 1; // crash if no layer found
+            std::clog << r->width << "x" << r->height << "device_index: " << vkra.device_index << std::endl;
+            p->setRenderAPI(&vkra, r->surface);
+        }
         p->updateNativeSurface(r->surface, r->width, r->height);
     }
 }
@@ -271,6 +273,16 @@ MDK_JNI(void, MDKPlayer_nativeSetTunnel, jboolean tunnel)
     r->tunnel = tunnel;
     if (r->surface)
         ApplySurface(r);
+}
+
+MDK_JNI(void, MDKPlayer_nativeSetVulkan, jboolean vulkan)
+{
+    auto r = reinterpret_cast<PlayerRef*>(obj_ptr);
+    if (r->vulkan == !!vulkan)
+        return;
+    r->vulkan = vulkan;
+    if (r->surface)
+        ApplySurface(r, true);
 }
 
 MDK_JNI(jlong, MDKPlayer_nativeSetSurface, jobject s, jlong win, int w, int h)

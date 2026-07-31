@@ -129,6 +129,13 @@ public class MainActivity extends AppCompatActivity {
                 mPlayer.setTunnel(isChecked);
             }
         });
+        Switch vulkan = findViewById(R.id.Vulkan);
+        vulkan.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton btn, boolean isChecked) {
+                mPlayer.setVulkan(isChecked);
+            }
+        });
         Spinner audioBackendSpinner = findViewById(R.id.audioBackendSpinner);
         audioBackendSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
